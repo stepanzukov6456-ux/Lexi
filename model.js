@@ -1,0 +1,6 @@
+export const empty=()=>({version:1,cards:{},folders:{}});
+export const uid=()=>crypto.randomUUID();
+export function merge(a,b){const out=empty();for(const k of ['cards','folders'])for(const id of new Set([...Object.keys(a[k]),...Object.keys(b[k])])){const x=a[k][id],y=b[k][id];out[k][id]=!x?y:!y?x:x.updated>y.updated?x:x.updated<y.updated?y:JSON.stringify(x)>JSON.stringify(y)?x:y;}return out;}
+export function valid(d){return d?.version===1&&['cards','folders'].every(k=>d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k])&&Object.values(d[k]).every(x=>x&&typeof x.id==='string'&&Number.isFinite(x.updated)&&(x.deleted||(k==='cards'?typeof x.term==='string'&&Array.isArray(x.tags):typeof x.name==='string'))));}
+export function review(c,grade,now=Date.now()){let days=grade===0?0:grade===1?1:Math.max(3,Math.round((c.interval||1)*2));return {...c,interval:days,due:now+(days?days*86400000:600000),updated:now};}
+export function parseCSV(s,sep=','){let rows=[],row=[],v='',q=false;for(let i=0;i<s.length;i++){let c=s[i];if(c==='"'){if(q&&s[i+1]==='"'){v+='"';i++;}else q=!q;}else if(!q&&c===sep){row.push(v);v='';}else if(!q&&c==='\n'){row.push(v.replace(/\r$/,''));rows.push(row);row=[];v='';}else v+=c;}if(q)throw Error('Незакрытые кавычки');if(v||row.length)rows.push([...row,v.replace(/\r$/,'')]);return rows;}
